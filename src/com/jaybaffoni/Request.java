@@ -5,13 +5,13 @@ public class Request {
 	int end;
 	int start;
 	boolean goingUp;
-	boolean boarded;
+	int boarded;
 	
 	public Request(int start, int destination) {
 		this.start = start;
 		this.end = destination;
 		this.goingUp = (this.end > this.start);
-		this.boarded = false;
+		this.boarded = -1;
 	}
 	
 	public int getEnd() {
@@ -26,27 +26,19 @@ public class Request {
 		return goingUp;
 	}
 	
-	public boolean isBoarded() {
+	public int getBoard() {
 		return boarded;
 	}
 	
-	public void setBoarded(boolean boarded) {
+	public void setBoarded(int boarded) {
 		this.boarded = boarded;
 	}
 	
 	public String full() {
-		String board = "B";
-		if(!boarded) {
-			board = "N";
-		}
-		return(board + "(" + start + "," + end + ")");
+		return(boarded + "(" + start + "," + end + ")");
 	}
 	
 	public String toString() {
-		String board = "B";
-		if(!boarded) {
-			board = "N";
-		}
 		if(end < 10) {
 			return("(0" + end + ")");
 		}

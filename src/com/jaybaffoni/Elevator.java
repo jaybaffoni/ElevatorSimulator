@@ -3,6 +3,7 @@ package com.jaybaffoni;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Elevator {
 	
@@ -10,6 +11,7 @@ public class Elevator {
 		READY, MOVING, OPENING_DOORS, UNLOADING, LOADING, CLOSING_DOORS;
 	}
 	
+	int elevatorNumber;
 	State state;
 	int currentFloor = 0;
 	ArrayList<Integer> stops;
@@ -20,7 +22,7 @@ public class Elevator {
 	Request workingRequest = null;
 	ArrayList<Request> controllerQueue;
 	
-	public Elevator(int capacity, Floor[] building, ArrayList<Request> queue) {
+	public Elevator(int elevatorNumber, int capacity, Floor[] building, ArrayList<Request> queue) {
 		stops = new ArrayList<Integer>(4);
 		requests = new ArrayList<Request>();
 		goingUp = false;
@@ -28,6 +30,8 @@ public class Elevator {
 		this.state = State.READY;
 		this.building = building;
 		this.controllerQueue = queue;
+		this.elevatorNumber = elevatorNumber;
+		currentFloor = ThreadLocalRandom.current().nextInt(0, building.length);
 	}
 	
 	
@@ -35,8 +39,12 @@ public class Elevator {
 		
 		//System.out.println(controllerQueue.size() + " " + workingRequest);
 		printStops();
+		
 		if(workingRequest != null) {
 			System.out.println(workingRequest.full());
+			if(workingRequest.getBoard() != elevatorNumber && workingRequest.getBoard() != -1) {
+				workingRequest = null;
+			}
 		}
 		
 		switch(state){
@@ -98,7 +106,7 @@ public class Elevator {
 					} else {
 						state = State.MOVING;
 						
-						if(workingRequest.isBoarded()) {
+						if(workingRequest.getBoard() == elevatorNumber) {
 							addStop(workingRequest.getEnd());
 							goingUp = workingRequest.getEnd() > currentFloor;
 						} else {
@@ -247,7 +255,7 @@ public class Elevator {
 		while(vacancy > 0 && building[currentFloor].hasPassengers(goingUp)) {
 			Request temp = building[currentFloor].pop(goingUp);
 			requests.add(temp);
-			temp.setBoarded(true);
+			temp.setBoarded(elevatorNumber);
 			loadingWR = false;
 			controllerQueue.remove(temp);
 			addStop(temp.getEnd());
@@ -270,7 +278,7 @@ public class Elevator {
 		Collections.sort(stops);
 	}
 	
-	public void process() {
+	/*public void process() {
 		for(Request r: requests) {
 			if(r.getStart() == currentFloor) {
 			   //addStop(r.getEnd());
@@ -292,7 +300,7 @@ public class Elevator {
 			Collections.sort(stops);
 		}
 		
-	}
+	}*/
 	
 	public int getCurrentFloor() {
 		return currentFloor;

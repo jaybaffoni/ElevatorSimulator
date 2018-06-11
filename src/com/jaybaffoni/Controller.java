@@ -8,13 +8,17 @@ public class Controller {
 	int floorCount;
 	Floor[] building;
 	ArrayList<Request> queue;
-	Elevator elevator;
+	//Elevator elevator;
+	Elevator[] elevators;
 	
-	public Controller(int floorCount) {
+	public Controller(int floorCount, int elevatorCount) {
 		this.floorCount = floorCount;
 		queue = new ArrayList<Request>();
 		building = new Floor[floorCount];
-		elevator = new Elevator(5, building, queue);
+		elevators = new Elevator[elevatorCount];
+		for(int i = 0; i < elevatorCount; i++) {
+			elevators[i] = new Elevator(i, 5, building, queue);
+		}
 		fillFloors();
 	}
 	
@@ -22,17 +26,20 @@ public class Controller {
 		
 		building[r.getStart()].addRequest(r);
 		
-		if(elevator.isReady()) {
-			elevator.addExternalStop(r);
-		} else {
-			queue.add(r);
+		for(Elevator e: elevators) {
+			if(e.isReady()) {
+				e.addExternalStop(r);
+			}
 		}
+		queue.add(r);
 		
 	}
 	
 	public void tick() {
 		//printState();
-		elevator.tick();
+		for(Elevator e: elevators) {
+			e.tick();
+		}
 		//print();
 		
 	}
@@ -44,37 +51,65 @@ public class Controller {
 	}
 	
 	public String print() {
-		String toReturn = "<html>" + elevator.getState();
-		//System.out.println("BUILDING");
-		for(int x = floorCount-1; x >= 0; x--) {
-			if(x == elevator.getCurrentFloor()) {
-				toReturn += "<br>" + elevator.toString();
-				toReturn += "X-";
-			} else {
-				toReturn += "<br>" + "----------------------";
+		String toReturn = "<html>";
+		for(Elevator e: elevators) {
+			String ministring = e.getState();
+			while(ministring.length() < (e.capacity * 4) + 2) {
+				ministring = "." + ministring;
 			}
+			toReturn += ministring;
+		}
+		
+		for(int x = floorCount-1; x >= 0; x--) {
+			toReturn += "<br>";
+			for(Elevator e: elevators) {
+				if(x == e.getCurrentFloor()) {
+					toReturn += e.toString();
+					toReturn += "X-";
+				} else {
+					toReturn += "----------------------";
+				}
+			}
+			
 			toReturn += "FLOOR: " + x + "\t";
 			toReturn += building[x].toString();
 		}
-		System.out.println(toReturn);
+		//System.out.println(toReturn);
 		return toReturn + "</html>";
 	}
 	
-	public void printState() {
+	public String printQueue() {
+		String toReturn = "QUEUE: ";
+		for(Request r: queue) {
+			toReturn += r.toString() + ",";
+		}
+		return toReturn;
+	}
+	
+	public void printState(Elevator elevator) {
 		System.out.println(elevator.getState());
 	}
 	
 	public boolean isComplete() {
-		return queue.isEmpty() && elevator.isReady();
+		return queue.isEmpty() && allElevatorsReady();
+	}
+	
+	public boolean allElevatorsReady() {
+		for(Elevator e: elevators) {
+			if(!e.isReady()) {
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	/*public boolean isControllerOk() {
 		return elevator.isReady() && 
 	}*/
 	
-	public boolean sameDirection(Request r) {
+	/*public boolean sameDirection(Request r) {
 		return elevator.isGoingUp() == r.isGoingUp();
-	}
+	}*/
 	
 	public void printPendingRequests() {
 		String toPrint = "\tController Requests: ";
